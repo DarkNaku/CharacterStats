@@ -1,0 +1,14 @@
+{
+  "name": "com.darknaku.characterstat",
+  "displayName": "Character Stat",
+  "version": "0.0.1",
+  "unity": "2018.3",
+  "author": "DarkNaku",
+  "description": "DarkNaku's Character Stat Package",
+  "dependencies": {
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DarkNaku/CharacterStat.git"
+  }
+}

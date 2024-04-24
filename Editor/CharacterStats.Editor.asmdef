@@ -1,0 +1,16 @@
+{
+    "name": "CharacterStats.Editor",
+    "rootNamespace": "",
+    "references": [
+        "GUID:25c7afc774b044c36883bd17b73a8919"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
