@@ -94,7 +94,7 @@ namespace DarkNaku.Stat
             });
         }
 
-        public void AddModifier(Modifier modifier)
+        public void Add(Modifier modifier)
         {
             if (_modifiers.ContainsKey(modifier.Type) == false)
             {
@@ -106,7 +106,7 @@ namespace DarkNaku.Stat
             OnChangeValue.Invoke(this);
         }
 
-        public void RemoveModifier(Modifier modifier)
+        public void Remove(Modifier modifier)
         {
             if (_modifiers.ContainsKey(modifier.Type))
             {
@@ -118,7 +118,7 @@ namespace DarkNaku.Stat
             }
         }
 
-        public void RemoveModifiersFromID(string id)
+        public void RemoveByID(string id)
         {
             if (string.IsNullOrEmpty(id)) return;
 
@@ -139,7 +139,7 @@ namespace DarkNaku.Stat
             }
         }
 
-        public void RemoveModifiersFromSource(object source)
+        public void RemoveBySource(object source)
         {
             if (source == null) return;
 

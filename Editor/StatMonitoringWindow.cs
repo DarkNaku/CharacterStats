@@ -46,7 +46,7 @@ public class StatMonitoringWindow : EditorWindow
     {
         _scrollPosition = EditorGUILayout.BeginScrollView(_scrollPosition, GUILayout.Width(960), GUILayout.Height(640));
 
-        foreach (var character in StatMonitoring.Characters)
+        foreach (var character in CharacterStatsManager.All)
         {
             EditorGUILayout.LabelField($"Character - {character.Name}");
 

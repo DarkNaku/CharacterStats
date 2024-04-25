@@ -1,11 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Events;
 
 namespace DarkNaku.Stat
 {
-    public interface ICharacterStats
+    public interface ICharacterStats : IDisposable
     {
         string Name { get; }
         IReadOnlyList<IStat> Stats { get; }
@@ -14,8 +15,8 @@ namespace DarkNaku.Stat
     [System.Serializable]
     public class CharacterStats<T> : ICharacterStats
     {
-        public string Name => _name ?? _parent.Name;
-        public IReadOnlyList<IStat> Stats { get; }
+        public string Name { get;}
+        public IReadOnlyList<IStat> Stats => _stats.Values.Cast<IStat>().ToList();
         public IReadOnlyDictionary<T, Stat<T>> All => _stats;
         public UnityEvent<CharacterStats<T>, Stat<T>> OnChangeStat { get; } = new();
 
@@ -35,24 +36,28 @@ namespace DarkNaku.Stat
             }
         }
         
-        private string _name;
-        private CharacterStats<T> _parent;
-        private Dictionary<T, Stat<T>> _stats = new();
+        public CharacterStats<T> Parent { get; protected set; }
+
+        protected Dictionary<T, Stat<T>> _stats = new();
+
+        public CharacterStats()
+        {
+            CharacterStatsManager.Add(this);
+        }
 
         public CharacterStats(string name)
         {
-            _name = name;
+            Name = name;
             
-#if UNITY_EDITOR 
-            StatMonitoring.Add(this);
-#endif
+            CharacterStatsManager.Add(this);
         }
         
-        public CharacterStats(string name, CharacterStats<T> parent) : this(name)
+        public CharacterStats(string name, CharacterStats<T> parent)
         {
-            _parent = parent;
+            Name = name;
+            Parent = parent;
 
-            foreach (var item in _parent.All)
+            foreach (var item in Parent.All)
             {
                 var stat = new Stat<T>(item.Value);
 
@@ -60,15 +65,23 @@ namespace DarkNaku.Stat
                 
                 _stats.Add(item.Key, stat);
             }
+
+            CharacterStatsManager.Add(this);
         } 
+
+        public void Dispose()
+        {
+            CharacterStatsManager.Remove(this);
+        }
 
         public bool Contains(T key) => _stats.ContainsKey(key);
 
-        public void Add(T key, float initialValue)
+        public bool AddStat(T key, float initialValue)
         {
             if (_stats.ContainsKey(key))
             {
-                Debug.LogErrorFormat("[CharacterStats] Add : Already added - {0}", key);
+                Debug.LogWarningFormat("[CharacterStats] AddStat : Already added - {0}", key);
+                return false;
             }
             else
             {
@@ -77,18 +90,22 @@ namespace DarkNaku.Stat
                 stat.OnChangeValue.AddListener(OnChangeValue);
 
                 _stats.Add(key, stat);
+
+                return true;
             }
         }
 
-        public void AddModifier(T key, Modifier modifier)
+        public bool AddModifier(T key, Modifier modifier)
         {
             if (_stats.ContainsKey(key))
             {
-                _stats[key].AddModifier(modifier);
+                _stats[key].Add(modifier);
+                return true;
             }
             else
             {
-                Debug.LogErrorFormat("[CharacterStats] AddModifier : Can't found stat - {0}", key);
+                Debug.LogWarningFormat("[CharacterStats] AddModifier : Can't found stat - {0}", key);
+                return false;
             }
         }
 
@@ -96,7 +113,7 @@ namespace DarkNaku.Stat
         {
             if (_stats.ContainsKey(key))
             {
-                _stats[key].RemoveModifier(modifier);
+                _stats[key].Remove(modifier);
             }
             else
             {
@@ -104,32 +121,20 @@ namespace DarkNaku.Stat
             }
         }
         
-        public void RemoveModifierFromID(string id)
+        public void RemoveModifierByID(string id)
         {
             foreach (var stat in _stats.Values)
             {
-                stat.RemoveModifiersFromID(id);
+                stat.RemoveByID(id);
             }
         }
         
-        public void RemoveModifierFromSource(object source)
+        public void RemoveModifierBySource(object source)
         {
             foreach (var stat in _stats.Values)
             {
-                stat.RemoveModifiersFromSource(source);
+                stat.RemoveBySource(source);
             }
-        }
-
-        public void Log(string title)
-        {
-            var info = $"[CharacterStats  -  {title}]";
-            
-            foreach (var stat in _stats.Values)
-            {
-                info += $"\n{stat.Key} = Value : {stat.Value}";
-            }
-            
-            Debug.Log(info);
         }
 
         private void OnChangeValue(Stat<T> stat)

@@ -23,12 +23,12 @@ public class StatTest
     {
         var stat = new Stat<STAT_TYPE>(STAT_TYPE.POWER, 100);
 
-        stat.AddModifier(new Modifier(ModifierType.Add, 5));
+        stat.Add(new Modifier(ModifierType.Add, 5));
 
         Assert.AreEqual(100, stat.BaseValue);
         Assert.AreEqual(105, stat.Value);
 
-        stat.AddModifier(new Modifier(ModifierType.Add, 10));
+        stat.Add(new Modifier(ModifierType.Add, 10));
 
         Assert.AreEqual(115, stat.Value);
     }
@@ -38,12 +38,12 @@ public class StatTest
     {
         var stat = new Stat<STAT_TYPE>(STAT_TYPE.POWER, 100);
 
-        stat.AddModifier(new Modifier(ModifierType.Percent, 0.15f));
+        stat.Add(new Modifier(ModifierType.Percent, 0.15f));
 
         Assert.AreEqual(100, stat.BaseValue);
         Assert.AreEqual(115, stat.Value);
 
-        stat.AddModifier(new Modifier(ModifierType.Percent, 0.25f));
+        stat.Add(new Modifier(ModifierType.Percent, 0.25f));
 
         Assert.AreEqual(140, stat.Value);
     }
@@ -53,12 +53,12 @@ public class StatTest
     {
         var stat = new Stat<STAT_TYPE>(STAT_TYPE.POWER, 125);
 
-        stat.AddModifier(new Modifier(ModifierType.Multiply, 0.1f));
+        stat.Add(new Modifier(ModifierType.Multiply, 0.1f));
 
         Assert.AreEqual(125, stat.BaseValue);
         Assert.AreEqual(137.5f, stat.Value);
 
-        stat.AddModifier(new Modifier(ModifierType.Multiply, 0.1f));
+        stat.Add(new Modifier(ModifierType.Multiply, 0.1f));
         Assert.AreEqual(151.25f, stat.Value);
     }
 
@@ -69,23 +69,23 @@ public class StatTest
 
         Assert.AreEqual(100, stat.BaseValue);
 
-        stat.AddModifier(new Modifier(ModifierType.Add, 25));
+        stat.Add(new Modifier(ModifierType.Add, 25));
 
         Assert.AreEqual(125, stat.Value);
 
-        stat.AddModifier(new Modifier(ModifierType.Percent, 0.15f));
+        stat.Add(new Modifier(ModifierType.Percent, 0.15f));
 
         Assert.AreEqual(143.75f, stat.Value);
 
-        stat.AddModifier(new Modifier(ModifierType.Percent, 0.05f));
+        stat.Add(new Modifier(ModifierType.Percent, 0.05f));
 
         Assert.AreEqual(150f, stat.Value);
 
-        stat.AddModifier(new Modifier(ModifierType.Multiply, 0.05f));
+        stat.Add(new Modifier(ModifierType.Multiply, 0.05f));
 
         Assert.AreEqual(157.5f, stat.Value);
 
-        stat.AddModifier(new Modifier(ModifierType.Multiply, 0.15f));
+        stat.Add(new Modifier(ModifierType.Multiply, 0.15f));
 
         Assert.AreEqual(181.125f, stat.Value);
     }
@@ -99,29 +99,29 @@ public class StatTest
         Assert.AreEqual(85, stat.BaseValue);
         Assert.AreEqual(85, stat.Value);
 
-        parent.AddModifier(new Modifier(ModifierType.Add, 15));
+        parent.Add(new Modifier(ModifierType.Add, 15));
 
         Assert.AreEqual(100, parent.Value);
         Assert.AreEqual(100, stat.BaseValue);
         Assert.AreEqual(100, stat.Value);
 
-        stat.AddModifier(new Modifier(ModifierType.Add, 25));
+        stat.Add(new Modifier(ModifierType.Add, 25));
 
         Assert.AreEqual(125, stat.Value);
 
-        stat.AddModifier(new Modifier(ModifierType.Percent, 0.15f));
+        stat.Add(new Modifier(ModifierType.Percent, 0.15f));
 
         Assert.AreEqual(143.75f, stat.Value);
 
-        stat.AddModifier(new Modifier(ModifierType.Percent, 0.05f));
+        stat.Add(new Modifier(ModifierType.Percent, 0.05f));
 
         Assert.AreEqual(150f, stat.Value);
 
-        stat.AddModifier(new Modifier(ModifierType.Multiply, 0.05f));
+        stat.Add(new Modifier(ModifierType.Multiply, 0.05f));
 
         Assert.AreEqual(157.5f, stat.Value);
 
-        stat.AddModifier(new Modifier(ModifierType.Multiply, 0.15f));
+        stat.Add(new Modifier(ModifierType.Multiply, 0.15f));
 
         Assert.AreEqual(181.125f, stat.Value);
 

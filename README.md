@@ -14,9 +14,9 @@ RPG 게임에서 사용하는 케릭터 스탯 관리 코드 입니다. 케릭�
 
 ### 클래스 
 
-수정중...
-
 ### `Stat<T>`
+
+직렬화 불가
 
 #### 속성
 
@@ -69,7 +69,7 @@ RPG 게임에서 사용하는 케릭터 스탯 관리 코드 입니다. 케릭�
 
 #### 함수
 
-##### `public void AddModifier(Modifier modifier)`
+##### `public void Add(Modifier modifier)`
 
 설명: 수정 사항을 추가합니다.
 
@@ -78,7 +78,7 @@ RPG 게임에서 사용하는 케릭터 스탯 관리 코드 입니다. 케릭�
 
 Returns: void
 
-##### `public void RemoveModifier(Modifier modifier)`
+##### `public void Remove(Modifier modifier)`
 
 설명: 수정 사항을 제거합니다.
 
@@ -87,7 +87,7 @@ Returns: void
 
 Returns: void
 
-##### `public void RemoveModifiersFromID(string id)`
+##### `public void RemoveByID(string id)`
 
 설명: ID가 같은 모든 수정 사항을 찾아 제거합니다.
 
@@ -96,7 +96,7 @@ Returns: void
 
 Returns: void
 
-##### `public void RemoveModifiersFromSource(object source)`
+##### `public void RemoveBySource(object source)`
 
 설명: object를 소스로 사용하고 있는 모든 수정 사항을 찾아 제거합니다.
 
@@ -105,7 +105,18 @@ Returns: void
 
 Returns: void
 
+##### `public IReadOnlyList<Modifier> GetModifiers(ModifierType modifierType)`
+
+설명: modifierType의 모든 수정사항을 얻어옵니다.
+
+매개변수:
+* `modifierType` (ModifierType): 수정 사항 타입.
+
+Returns: IReadOnlyList<Modifier>
+
 ### `Modifier`
+
+직렬화 가능
 
 #### 속성
 
@@ -121,37 +132,59 @@ Returns: void
 
 타입: float
 
-##### `public object Source { get; set; }`
-
-설명: 수정 사항을 부여한 주체 등 수정사항들을 그룹화 하기 위한 속성.
-
-타입: object 
-
-##### `public string ID { get; set; }`
+##### `public string ID { get; }`
 
 설명: 수정사항을 고유하게 구분하기 위한 문자열.
 
 타입: string
 
+##### `public object Source { get; set; }`
+
+설명: 수정 사항을 부여한 주체 등 수정사항들을 그룹화 하기 위한 속성. (주의 : 이 속성은 직렬화 되지 않습니다.)
+
+타입: object 
+
 #### 생성자
 
-##### `public Modifier(ModifierType type, float value, object source = null, string id = "")`
+##### `public Modifier(ModifierType type, float value)`
 
-설명: Source와 ID를 제외한 속성의 모든 값은 생성자에서 지정하며 수정할 수 없습니다.
+설명: 수정 타입과 수정 수치를 설정하고 이 후 수정은 불가능 합니다.
 
 매개변수:
 * `type` (ModifierType): 수정타입.
 * `value` (float): 수치.
-* `source` (object): 소스.
-* `id` (string): 고유 문자열.
+
+#### 함수
+
+##### `public Modifier SetID(string id)`
+
+설명: 수정사항 들의 그룹을 만들기 위해 ID를 설정합니다. 수정 사항의 제거가 보다 편해집니다.
+
+매개변수:
+* `id` (string): ID.
+
+Returns: void
+
 
 ### `CharacterStats<T>`
 
 #### 속성
 
+##### `public string Name { get;}`
+
+설명: 케릭터 이름.
+
+타입: string
+
+##### `public IReadOnlyList<IStat> Stats {get}`
+
+설명: 모든 스탯 정보.
+
+타입: IReadOnlyList<IStat>
+
 ##### `public IReadOnlyDictionary<T, Stat<T>> All { get; }`
 
-설명: 모든 수정사항.
+설명: 스탯 타입을 포함한 모든 스탯 정보.
 
 타입: IReadOnlyDictionary<T, Stat<T>>
 
@@ -178,7 +211,7 @@ Returns: void
 
 Returns: bool
 
-##### `public void Add(T key, float initialValue)`
+##### `public bool AddStat(T key, float initialValue)`
 
 설명: 스탯을 추가 합니다.
 
@@ -186,9 +219,9 @@ Returns: bool
 * `key` (T): 스탯의 키.
 * `initialiValue` (float): 스탯 초기값.
 
-Returns: void
+Returns: bool 
 
-##### `public void AddModifier(T key, Modifier modifier)`
+##### `public bool AddModifier(T key, Modifier modifier)`
 
 설명: 수정 사항을 추가합니다.
 
@@ -196,7 +229,7 @@ Returns: void
 * `key` (T): 스탯의 키.
 * `modifier` (Modifier): 수정사항.
 
-Returns: void
+Returns: bool 
 
 ##### `public void RemoveModifier(T key, Modifier modifier)`
 
@@ -208,7 +241,7 @@ Returns: void
 
 Returns: void
 
-##### `public void RemoveModifierFromID(string id)`
+##### `public void RemoveModifierByID(string id)`
 
 설명: 모든 Stat에서 같은 id를 가진 모든 수정을 제거합니다.
 
@@ -217,7 +250,7 @@ Returns: void
 
 Returns: void
 
-##### `public void RemoveModifierFromSource(object source)`
+##### `public void RemoveModifierBySource(object source)`
 
 설명: 모든 Stat에서 같은 소스를 가진 모든 수정을 제거합니다.
 
