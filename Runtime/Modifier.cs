@@ -9,10 +9,12 @@ namespace DarkNaku.Stat
         [SerializeField] private ModifierType _type;
         [SerializeField] private float _value;
         [SerializeField] private string _id;
+        [SerializeField] private bool _isPost;
 
         public ModifierType Type => _type;
         public float Value => _value;
         public string ID => _id;
+        public bool IsPost => _isPost;
         public object Source { get; set; }
 
         public Modifier(ModifierType type, float value)
@@ -27,6 +29,13 @@ namespace DarkNaku.Stat
             return this;
         }
 
-        public override string ToString() => $"Type : {_type}, Value : {_value}, Source : {nameof(Source)}, ID : {ID}";
+        public Modifier SetPost(bool isPost)
+        {
+            _isPost = isPost;
+
+            return this;
+        }
+
+        public override string ToString() => $"Type : {_type}, Value : {_value}, Source : {nameof(Source)}, ID : {ID}, IsPost : {IsPost}";
     }
 }

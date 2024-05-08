@@ -11,7 +11,7 @@ namespace DarkNaku.Stat
         float BaseValue { get; set; }
         float Value { get; }    
         string Name { get; }
-        IReadOnlyList<Modifier> GetModifiers(ModifierType modifierType);
+        IReadOnlyCollection<Modifier> GetModifiers(ModifierType modifierType);
     }
     
     public class Stat<T> : IStat
@@ -20,17 +20,10 @@ namespace DarkNaku.Stat
 
         public float BaseValue 
         { 
-            get => _parent?.Value ?? _baseValue;
+            get => _baseValue + (_parent == null ? 0 : _parent.CalculateValue(false));
             set
             {
-                if (_parent == null)
-                {
-                    _baseValue = value;
-                }
-                else
-                {
-                    Debug.LogError("[Stat] Can't set base value to child stat.");
-                }
+                _baseValue = value;
             }
         }
 
@@ -41,7 +34,7 @@ namespace DarkNaku.Stat
                 if (_isDirty || _lastBaseValue != BaseValue)
                 {
                     _lastBaseValue = BaseValue;
-                    _value = CalculateFinalValue();
+                    _value = CalculateValue(true);
                     _isDirty = false;
                 }
 
@@ -64,15 +57,15 @@ namespace DarkNaku.Stat
         private float _lastBaseValue;
         private float _value;
 
-        private readonly Dictionary<ModifierType, List<Modifier>> _modifiers;
+        private readonly Dictionary<ModifierType, HashSet<Modifier>> _modifiers;
 
         private Stat()
         {
-            _modifiers = new Dictionary<ModifierType, List<Modifier>>
+            _modifiers = new Dictionary<ModifierType, HashSet<Modifier>>
             {
-                { ModifierType.Add, new List<Modifier>() },
-                { ModifierType.Percent, new List<Modifier>() },
-                { ModifierType.Multiply, new List<Modifier>() }
+                { ModifierType.Add, new HashSet<Modifier>() },
+                { ModifierType.Percent, new HashSet<Modifier>() },
+                { ModifierType.Multiply, new HashSet<Modifier>() }
             };
         }
 
@@ -85,6 +78,21 @@ namespace DarkNaku.Stat
         
         public Stat(Stat<T> parent) : this()
         {
+            _initialValue = 0f;
+            _baseValue = _initialValue;
+            _parent = parent;
+            
+            _parent.OnChangeValue.AddListener((stat) =>
+            {
+                _isDirty = true;
+                OnChangeValue.Invoke(this);
+            });
+        }
+
+        public Stat(Stat<T> parent, float initialValue) : this()
+        {
+            _initialValue = initialValue;
+            _baseValue = _initialValue;
             _parent = parent;
             
             _parent.OnChangeValue.AddListener((stat) =>
@@ -98,7 +106,7 @@ namespace DarkNaku.Stat
         {
             if (_modifiers.ContainsKey(modifier.Type) == false)
             {
-                _modifiers.Add(modifier.Type, new List<Modifier>());
+                _modifiers.Add(modifier.Type, new HashSet<Modifier>());
             }
 
             _modifiers[modifier.Type].Add(modifier);
@@ -126,7 +134,7 @@ namespace DarkNaku.Stat
             
             foreach (var modifiers in _modifiers.Values)
             {
-                if (modifiers.RemoveAll(modifier => modifier.ID == id) > 0)
+                if (modifiers.RemoveWhere(modifier => modifier.ID == id) > 0)
                 {
                     removed = true;
                 }
@@ -147,7 +155,7 @@ namespace DarkNaku.Stat
 
             foreach (var modifiers in _modifiers.Values)
             {
-                if (modifiers.RemoveAll(modifier => modifier.Source == source) > 0)
+                if (modifiers.RemoveWhere(modifier => modifier.Source == source) > 0)
                 {
                     removed = true;
                 }
@@ -160,7 +168,7 @@ namespace DarkNaku.Stat
             }
         }
         
-        public IReadOnlyList<Modifier> GetModifiers(ModifierType modifierType)
+        public IReadOnlyCollection<Modifier> GetModifiers(ModifierType modifierType)
         {
             if (_modifiers.TryGetValue(modifierType, out var modifiers))
             {
@@ -170,30 +178,42 @@ namespace DarkNaku.Stat
             return Enumerable.Empty<Modifier>().ToList();
         }
 
-        protected virtual float CalculateFinalValue()
+        protected virtual float CalculateValue(bool withPostModifier)
         {
-            float finalValue = BaseValue;
+            float value = BaseValue;
 
-            finalValue = CalculateAdd(finalValue);
-            finalValue = CalculatePercent(finalValue);
-            finalValue = CalculateMultiply(finalValue);
+            value = CalculateAdd(value, withPostModifier);
+            value = CalculatePercent(value, withPostModifier);
+            value = CalculateMultiply(value, withPostModifier);
 
-            return finalValue;
+            return value;
         }
 
-        protected float CalculateAdd(float baseValue)
+        protected float CalculateAdd(float baseValue, bool withPostModifier)
         {
             var modifiers = _modifiers[ModifierType.Add];
 
             foreach (var modifier in modifiers)
             {
+                if (modifier.IsPost) continue;
+
                 baseValue += modifier.Value;
+            }
+
+            if (withPostModifier)
+            {
+                var postModifiers = GetPostModifiers(ModifierType.Add);
+
+                foreach (var modifier in postModifiers)
+                {
+                    baseValue += modifier.Value;
+                }
             }
 
             return baseValue;
         }
 
-        protected float CalculatePercent(float baseValue)
+        protected float CalculatePercent(float baseValue, bool withPostModifier)
         {
             var modifiers = _modifiers[ModifierType.Percent];
 
@@ -201,22 +221,63 @@ namespace DarkNaku.Stat
 
             foreach (var modifier in modifiers)
             {
+                if (modifier.IsPost) continue;
+
                 percentAddSum += modifier.Value;
+            }
+
+            if (withPostModifier)
+            {
+                var postModifiers = GetPostModifiers(ModifierType.Percent);
+
+                foreach (var modifier in postModifiers)
+                {
+                    percentAddSum += modifier.Value;
+                }
             }
 
             return baseValue * (1f + percentAddSum);
         }
 
-        protected float CalculateMultiply(float baseValue)
+        protected float CalculateMultiply(float baseValue, bool withPostModifier)
         {
             var modifiers = _modifiers[ModifierType.Multiply];
 
             foreach (var modifier in modifiers)
             {
+                if (modifier.IsPost) continue;
+
                 baseValue *= (1f + modifier.Value);
             }
 
+            if (withPostModifier)
+            {
+                var postModifiers = GetPostModifiers(ModifierType.Multiply);
+
+                foreach (var modifier in postModifiers)
+                {
+                    baseValue *= (1f + modifier.Value);
+                }
+            }
+
             return baseValue;
+        }
+
+        private List<Modifier> GetPostModifiers(ModifierType modifierType)
+        {
+            var postModifiers = new List<Modifier>();
+
+            if (_parent != null)
+            {
+                postModifiers.AddRange(_parent.GetPostModifiers(modifierType));
+            }
+
+            if (_modifiers.TryGetValue(modifierType, out var modifiers))
+            {
+                postModifiers.AddRange(modifiers.Where(modifier => modifier.IsPost));
+            }
+
+            return postModifiers;
         }
     }
 }

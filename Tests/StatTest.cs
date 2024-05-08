@@ -128,4 +128,38 @@ public class StatTest
         Assert.AreEqual(85, parent.BaseValue);
         Assert.AreEqual(100, parent.Value);
     }
+
+    [Test]
+    public void _05_후수정_테스트()
+    {
+        var parent = new Stat<STAT_TYPE>(STAT_TYPE.POWER, 0);
+        var stat = new Stat<STAT_TYPE>(parent, 100);
+
+        Assert.AreEqual(0, parent.BaseValue);
+        Assert.AreEqual(0, parent.Value);
+        Assert.AreEqual(100, stat.BaseValue);
+        Assert.AreEqual(100, stat.Value);
+
+        parent.Add(new Modifier(ModifierType.Percent, 0.25f).SetPost(true));
+
+        Assert.AreEqual(0, parent.BaseValue);
+        Assert.AreEqual(0, parent.Value);
+        Assert.AreEqual(100, stat.BaseValue);
+        Assert.AreEqual(125, stat.Value);
+
+        var parent2 = new Stat<STAT_TYPE>(STAT_TYPE.POWER, 100);
+        var stat2 = new Stat<STAT_TYPE>(parent2);
+
+        Assert.AreEqual(100, parent2.BaseValue);
+        Assert.AreEqual(100, parent2.Value);
+        Assert.AreEqual(100, stat2.BaseValue);
+        Assert.AreEqual(100, stat2.Value);
+
+        parent2.Add(new Modifier(ModifierType.Percent, 0.25f).SetPost(true));
+
+        Assert.AreEqual(100, parent2.BaseValue);
+        Assert.AreEqual(125, parent2.Value);
+        Assert.AreEqual(100, stat2.BaseValue);
+        Assert.AreEqual(125, stat2.Value);
+    }
 }
