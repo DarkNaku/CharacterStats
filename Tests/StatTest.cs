@@ -161,5 +161,52 @@ public class StatTest
         Assert.AreEqual(125, parent2.Value);
         Assert.AreEqual(100, stat2.BaseValue);
         Assert.AreEqual(125, stat2.Value);
+
+        var stat2Changed = false;
+
+        stat2.OnChangeValue.AddListener((s) => 
+        { 
+            stat2Changed = true;
+        });
+
+        parent2.Add(new Modifier(ModifierType.Percent, 0.25f).SetPost(true));
+
+        Assert.IsTrue(stat2Changed);
+
+        Assert.AreEqual(100, parent2.BaseValue);
+        Assert.AreEqual(150, parent2.Value);
+        Assert.AreEqual(100, stat2.BaseValue);
+        Assert.AreEqual(150, stat2.Value);
+    }
+
+    [Test]
+    public void _06_이벤트_테스트()
+    {
+        var parent = new Stat<STAT_TYPE>(STAT_TYPE.POWER, 0);
+        var stat = new Stat<STAT_TYPE>(parent);
+
+        Assert.AreEqual(0, parent.BaseValue);
+        Assert.AreEqual(0, parent.Value);
+        Assert.AreEqual(0, stat.BaseValue);
+        Assert.AreEqual(0, stat.Value);
+
+        stat.Add(new Modifier(ModifierType.Add, 100f));
+
+        Assert.AreEqual(0, parent.BaseValue);
+        Assert.AreEqual(0, parent.Value);
+        Assert.AreEqual(0, stat.BaseValue);
+        Assert.AreEqual(100, stat.Value);
+
+        var statChanged = false;
+
+        stat.OnChangeValue.AddListener(s => statChanged = true);
+
+        parent.Add(new Modifier(ModifierType.Percent, 0.25f).SetPost(true));
+
+        Assert.IsTrue(statChanged);
+        Assert.AreEqual(0, parent.BaseValue);
+        Assert.AreEqual(0, parent.Value);
+        Assert.AreEqual(0, stat.BaseValue);
+        Assert.AreEqual(125, stat.Value);
     }
 }
