@@ -1,7 +1,7 @@
 {
   "name": "com.darknaku.characterstat",
   "displayName": "Character Stat",
-  "version": "0.0.103",
+  "version": "1.0.0",
   "unity": "2018.3",
   "author": "DarkNaku",
   "description": "DarkNaku's Character Stat Package",

@@ -20,7 +20,7 @@ namespace DarkNaku.Stat
 
         public float BaseValue 
         { 
-            get => _baseValue + (_parent == null ? 0 : _parent.CalculateValue(false));
+            get => _baseValue + (_parent == null ? 0 : _parent.ValueWithoutPost);
             set
             {
                 _baseValue = value;
@@ -31,12 +31,7 @@ namespace DarkNaku.Stat
         {
             get
             {
-                if (_isDirty || _lastBaseValue != BaseValue)
-                {
-                    _lastBaseValue = BaseValue;
-                    _value = CalculateValue(true);
-                    _isDirty = false;
-                }
+                if (_isDirty || _lastBaseValue != BaseValue) UpdateValues();
 
                 return _value;
             }
@@ -48,6 +43,16 @@ namespace DarkNaku.Stat
 
         public UnityEvent<Stat<T>> OnChangeValue { get; } = new();
 
+        private float ValueWithoutPost
+        {
+            get
+            {
+                if (_isDirty || _lastBaseValue != BaseValue) UpdateValues();
+
+                return _valueWithoutPost;
+            }
+        }
+
         private float _initialValue;
         private float _baseValue;
         private Stat<T> _parent;
@@ -56,6 +61,7 @@ namespace DarkNaku.Stat
         private bool _isDirty = true;
         private float _lastBaseValue;
         private float _value;
+        private float _valueWithoutPost;
 
         private readonly Dictionary<ModifierType, HashSet<Modifier>> _modifiers;
 
@@ -261,6 +267,14 @@ namespace DarkNaku.Stat
             }
 
             return baseValue;
+        }
+
+        private void UpdateValues()
+        {
+            _lastBaseValue = BaseValue;
+            _value = CalculateValue(true);
+            _valueWithoutPost = CalculateValue(false);
+            _isDirty = false;
         }
 
         private List<Modifier> GetPostModifiers(ModifierType modifierType)
