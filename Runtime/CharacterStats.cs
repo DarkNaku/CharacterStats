@@ -59,7 +59,7 @@ namespace DarkNaku.Stat
 
             foreach (var item in Parent.All)
             {
-                var stat = new Stat<T>(item.Value);
+                var stat = CreateStat(item.Value);
 
                 stat.OnChangeValue.AddListener(OnChangeValue);
                 
@@ -67,7 +67,9 @@ namespace DarkNaku.Stat
             }
 
             CharacterStatsManager.Add(this);
-        } 
+        }
+
+        public virtual Stat<T> CreateStat(Stat<T> parent) => new Stat<T>(parent);
 
         public void Dispose()
         {

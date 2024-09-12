@@ -9,8 +9,45 @@ RPG 게임에서 사용하는 케릭터 스탯 관리 코드 입니다. 케릭�
 3. https://github.com/DarkNaku/CharacterStats.git 입력하고 Add를 클릭합니다.
 
 ### 사용방법
+연산 순서는 Add > Percent > Multiply > Reduce > Subtract 이며, 추가 순서와 상관 없이 고정 입니다. 
+만약 순서를 변경하거나 연산 내용을 변경하고 싶다면 상속을 받아 Stat<T>의 CalculateValue 함수를 오버라이드 하면 됩니다.
+CharacterStats<T> 또한 CreateStat 함수를 변경을 위해 오버라이드 할수 있도록 제공하고 있습니다.
 
-샘플제작중...
+#### 스텟
+```c#
+// 단일 스탯 사용 방법
+public enum STAT_TYPE { POWER, HEALTH, INTELIGENCE, WISDOM, AGILITY, LUCKY }
+
+var stat = new Stat<STAT_TYPE>(STAT_TYPE.POWER, 100);
+
+stat.Add(new Modifier(ModifierType.Add, 5));                        // 100 + 5
+stat.Add(new Modifier(ModifierType.Percent, 0.15f));                // 105 + (105 * 0.15)
+stat.Add(new Modifier(ModifierType.Multiply, 0.1f));                // (105 + (105 * 0.15)) * 1.1
+stat.Add(new Modifier(ModifierType.Reduce, 0.1f) { Source = key }); // ((105 + (105 * 0.15)) * 1.1) * 0.9
+stat.Add(new Modifier(ModifierType.Subtract, 50f).SetID("A"));      // (((105 + (105 * 0.15)) * 1.1) * 0.9) - 50
+
+stat.RemoveBySource(key); // key 오브젝트 키로 등록된 모든 수정사항 스탯에서 제거
+stat.RemoveByID("A");     // "A" 아이디로 등록된 모든 수정사항 스탯에서 제거
+```
+
+#### 케릭터
+```c#
+// 스탯 집합인 케릭터 클래스 사용 방법
+var characterStats = new CharacterStats<STAT_TYPE>("Sample");
+
+characterStats.AddStat(STAT_TYPE.POWER, 50);
+characterStats.AddStat(STAT_TYPE.HEALTH, 100);
+characterStats.AddStat(STAT_TYPE.INTELIGENCE, 30);
+
+characterStats.AddModifier(STAT_TYPE.POWER, new Modifier(ModifierType.Add, 20));
+characterStats.AddModifier(STAT_TYPE.POWER, new Modifier(ModifierType.Add, 10) { Source = key });               // key 오브젝트 키 설정
+characterStats.AddModifier(STAT_TYPE.INTELIGENCE, new Modifier(ModifierType.Multiply, 0.1f) { Source = key });  // key 오브젝트 키 설정
+characterStats.AddModifier(STAT_TYPE.HEALTH, new Modifier(ModifierType.Percent, 0.1f).SetID("A"));              // "A" 아이디 설정
+characterStats.AddModifier(STAT_TYPE.INTELIGENCE, new Modifier(ModifierType.Multiply, 0.1f).SetID("A"));        // "A" 아이디 설정
+
+characterStats.RemoveModifierBySource(key); // key 오브젝트 키로 등록된 수정사항 모든 스탯에서 제거
+characterStats.RemoveModifierByID("A");     // "A" 아이디로 등록된 수정사항 모든 스탯에서 제거
+```
 
 ### 클래스 
 

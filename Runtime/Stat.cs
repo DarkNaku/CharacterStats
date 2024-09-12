@@ -63,26 +63,16 @@ namespace DarkNaku.Stat
         private float _value;
         private float _valueWithoutPost;
 
-        private readonly Dictionary<ModifierType, HashSet<Modifier>> _modifiers;
+        private readonly Dictionary<ModifierType, HashSet<Modifier>> _modifiers = new Dictionary<ModifierType, HashSet<Modifier>>();
 
-        private Stat()
-        {
-            _modifiers = new Dictionary<ModifierType, HashSet<Modifier>>
-            {
-                { ModifierType.Add, new HashSet<Modifier>() },
-                { ModifierType.Percent, new HashSet<Modifier>() },
-                { ModifierType.Multiply, new HashSet<Modifier>() }
-            };
-        }
-
-        public Stat(T key, float initialValue) : this()
+        public Stat(T key, float initialValue)
         {
             _initialValue = initialValue;
             _baseValue = _initialValue;
             _key = key;
         }
         
-        public Stat(Stat<T> parent) : this()
+        public Stat(Stat<T> parent)
         {
             _initialValue = 0f;
             _baseValue = _initialValue;
@@ -95,7 +85,7 @@ namespace DarkNaku.Stat
             });
         }
 
-        public Stat(Stat<T> parent, float initialValue) : this()
+        public Stat(Stat<T> parent, float initialValue)
         {
             _initialValue = initialValue;
             _baseValue = _initialValue;
@@ -191,19 +181,22 @@ namespace DarkNaku.Stat
             value = CalculateAdd(value, withPostModifier);
             value = CalculatePercent(value, withPostModifier);
             value = CalculateMultiply(value, withPostModifier);
+            value = CalculateReduce(value, withPostModifier);
+            value = CalculateSubtract(value, withPostModifier);
 
             return value;
         }
 
         protected float CalculateAdd(float baseValue, bool withPostModifier)
         {
-            var modifiers = _modifiers[ModifierType.Add];
-
-            foreach (var modifier in modifiers)
+            if (_modifiers.TryGetValue(ModifierType.Add, out var modifiers))
             {
-                if (modifier.IsPost) continue;
+                foreach (var modifier in modifiers)
+                {
+                    if (modifier.IsPost) continue;
 
-                baseValue += modifier.Value;
+                    baseValue += modifier.Value;
+                }
             }
 
             if (withPostModifier)
@@ -221,15 +214,16 @@ namespace DarkNaku.Stat
 
         protected float CalculatePercent(float baseValue, bool withPostModifier)
         {
-            var modifiers = _modifiers[ModifierType.Percent];
-
             var percentAddSum = 0f;
-
-            foreach (var modifier in modifiers)
+            
+            if (_modifiers.TryGetValue(ModifierType.Percent, out var modifiers))
             {
-                if (modifier.IsPost) continue;
+                foreach (var modifier in modifiers)
+                {
+                    if (modifier.IsPost) continue;
 
-                percentAddSum += modifier.Value;
+                    percentAddSum += modifier.Value;
+                }
             }
 
             if (withPostModifier)
@@ -247,13 +241,14 @@ namespace DarkNaku.Stat
 
         protected float CalculateMultiply(float baseValue, bool withPostModifier)
         {
-            var modifiers = _modifiers[ModifierType.Multiply];
-
-            foreach (var modifier in modifiers)
+            if (_modifiers.TryGetValue(ModifierType.Multiply, out var modifiers))
             {
-                if (modifier.IsPost) continue;
+                foreach (var modifier in modifiers)
+                {
+                    if (modifier.IsPost) continue;
 
-                baseValue *= (1f + modifier.Value);
+                    baseValue *= (1f + modifier.Value);
+                }
             }
 
             if (withPostModifier)
@@ -268,7 +263,59 @@ namespace DarkNaku.Stat
 
             return baseValue;
         }
+        
+        protected float CalculateReduce(float baseValue, bool withPostModifier)
+        {
+            var reduceSum = 0f;
+            
+            if (_modifiers.TryGetValue(ModifierType.Reduce, out var modifiers))
+            {
+                foreach (var modifier in modifiers)
+                {
+                    if (modifier.IsPost) continue;
 
+                    reduceSum += modifier.Value;
+                }
+            }
+
+            if (withPostModifier)
+            {
+                var postModifiers = GetPostModifiers(ModifierType.Reduce);
+
+                for (int i = 0; i < postModifiers.Count; i++)
+                {
+                    reduceSum += postModifiers[i].Value;
+                }
+            }
+
+            return baseValue * Mathf.Max(0f, 1f - reduceSum);
+        }
+
+        protected float CalculateSubtract(float baseValue, bool withPostModifier)
+        {
+            if (_modifiers.TryGetValue(ModifierType.Subtract, out var modifiers))
+            {
+                foreach (var modifier in modifiers)
+                {
+                    if (modifier.IsPost) continue;
+
+                    baseValue -= modifier.Value;
+                }
+            }
+
+            if (withPostModifier)
+            {
+                var postModifiers = GetPostModifiers(ModifierType.Subtract);
+
+                foreach (var modifier in postModifiers)
+                {
+                    baseValue -= modifier.Value;
+                }
+            }
+
+            return baseValue;
+        }
+        
         private void UpdateValues()
         {
             _lastBaseValue = BaseValue;

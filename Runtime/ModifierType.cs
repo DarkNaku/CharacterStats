@@ -10,6 +10,8 @@ namespace DarkNaku.Stat
         public static ModifierType Add = new(1, nameof(Add));
         public static ModifierType Percent = new(2, nameof(Percent));
         public static ModifierType Multiply = new(3, nameof(Multiply));
+        public static ModifierType Reduce = new(4, nameof(Reduce));
+        public static ModifierType Subtract = new(5, nameof(Subtract));
 
         [SerializeField] private string _name;
         [SerializeField] private int _id;
